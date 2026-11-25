@@ -4,6 +4,29 @@ This is the **fast-scripted** repository (split from `hermes-brake-disc` at
 commit cc30062 on 2026-11-25). Runs 1 to 7 below were made with the fully
 agentic CAD stage, before the split.
 
+## Window-focus check (2026-11-25, FR330V-wintest, scripts only) - PASS
+
+pipeline.py with the window handling: SolidWorks raised at 16:36:02; SpaceClaim
+minimized at 16:36:36 and Fluent at 16:36:44 as they finished opening; SpaceClaim
+restored at 16:37:42 (STEP ready), Fluent restored at 16:38:06 (Gate 2 done).
+All three reports PASS; 5.3 min from launch to Fluent on the contour.
+
+## Run F2, fast-scripted variant (2026-11-25, FR330V-20261125-1629F) - complete
+
+Same harness as F1. **5.4 min from Gate 0 to Fluent on the contour, 6.0 min with
+the lead's final check** (16:29:06 to 16:34:32 / 16:35:08). Every gate PASS
+first time, no repairs.
+
+| Time | Event |
+|---|---|
+| 16:29:29 | pipeline.py launched; SpaceClaim ready 16:29:57 (28 s), Fluent 16:30:08 (39 s) |
+| 16:29:30 to 16:30:57 | sw_build.py: 90 calls, 84 s |
+| 16:30:57 to 16:31:21 | spaceclaim_prep.py (pre-opened): 24 s |
+| 16:31:21 to 16:34:32 | fluent_fast.py (pre-opened): 191 s (mesh 62, gate 25, setup 36, solve 59) |
+
+Sub-agent tokens (measured): G1 70 967, G2 60 229, G3 60 530 (191 726 total).
+Stored/applied 98.77 %; peaks 729 K rotor / 924 K pad at 0.2 s; end 384 / 390 K.
+
 ## Run F1, fast-scripted variant (2026-11-25, FR330V-20261125-1616F) - complete
 
 Claude lead + 3 Claude specialists. **6.5 min from Gate 0 to Fluent on the

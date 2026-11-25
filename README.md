@@ -46,6 +46,8 @@ Full list, checks and setup order for people and agents: **`REQUIREMENTS.md`**.
   `profile/`, and `scripts/preflight.ps1` checks a machine against the pinned
   environment. On 2026-11-02 it passed 29/29 checks against a freshly rendered
   profile, with live MCP connections.
+- **Run F2, 2026-11-25:** all gates PASS, **5.4 min** to Fluent on the contour
+  (6.0 min with the lead's final check), 192k sub-agent tokens.
 - **Run F1, 2026-11-25** (Claude lead + 3 specialists): all gates PASS first time,
   **6.5 min** from Gate 0 to Fluent on the contour (7.0 min with the lead's final
   check); 193k sub-agent tokens measured. See `docs/VALIDATION.md`.

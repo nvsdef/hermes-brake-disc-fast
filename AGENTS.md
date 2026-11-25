@@ -20,6 +20,10 @@ during the build, runs `scripts/stages/spaceclaim_prep.py` the moment
 spaceclaim-engineer and fluent-engineer each judge their stage's report ->
 gate summary (lead).** No drawings, no images, no report.
 
+**Windows:** the pipeline brings SolidWorks to the front while it builds, keeps
+the pre-opened SpaceClaim and Fluent minimized, and restores each one only when
+its stage starts (set `PIPELINE_WINDOW_FOCUS=0` in the launcher to turn this off).
+
 ## 1. Who am I? Find your role, then load your role files before any other tool call
 
 | If you are... | You know it because | Read first (file tool) | Then load these skills (skill_view) |

@@ -172,3 +172,9 @@ an end-to-end run of about 10 minutes, no report, no images.
     while Fluent runs. Trade-off: Gate 2 starts before the lead's Gate 1 review;
     a late Gate 1 FAIL stops the run and discards downstream artifacts. Run F1:
     6.5 min, all gates PASS.
+51. **Pre-opened applications wait minimized.** User feedback on run F2: the
+    pre-opened SpaceClaim and Fluent windows covered SolidWorks while it built.
+    `pipeline.py` now raises SolidWorks at the start, minimizes the SpaceClaim and
+    Fluent windows (by the PIDs `prewarm.py` recorded, nothing else) while the CAD
+    builds, and restores each one when its stage starts. Window handling is
+    cosmetic: any error is ignored and never stops a stage.

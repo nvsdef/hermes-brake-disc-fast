@@ -80,6 +80,75 @@ def close_prewarm_fluent():
         event("prewarm_fluent_close_failed", error=repr(e)[:200])
 
 
+# ---- window focus: the app that is working is on screen, the pre-opened ones wait minimized ----
+SC_FILE = RUN / "20_spaceclaim" / "prewarm_spaceclaim.json"
+FOCUS = os.environ.get("PIPELINE_WINDOW_FOCUS", "1") == "1"
+try:
+    import psutil, win32con, win32gui, win32process
+except Exception:  # noqa: BLE001 - focus is cosmetic, never fatal
+    FOCUS = False
+
+
+def _windows(pids):
+    out = []
+    def cb(h, _):
+        try:
+            if win32gui.IsWindowVisible(h) and win32gui.GetWindowText(h) and win32gui.GetParent(h) == 0:
+                if win32process.GetWindowThreadProcessId(h)[1] in pids:
+                    out.append(h)
+        except Exception:
+            pass
+        return True
+    win32gui.EnumWindows(cb, None)
+    return out
+
+
+def app_pids(which):
+    try:
+        if which == "solidworks":
+            return {p.pid for p in psutil.process_iter(["name"]) if (p.info["name"] or "").lower() == "sldworks.exe"}
+        f = SC_FILE if which == "spaceclaim" else FL_FILE
+        d = json.loads(f.read_text())
+        if d.get("state") != "ready":
+            return set()
+        return {d["pid"]} if which == "spaceclaim" and d.get("pid") else set(d.get("pids") or [])
+    except Exception:
+        return set()
+
+
+def minimize(which):
+    if not FOCUS:
+        return 0
+    n = 0
+    for h in _windows(app_pids(which)):
+        try:
+            if not win32gui.IsIconic(h):
+                win32gui.ShowWindow(h, win32con.SW_SHOWMINNOACTIVE)
+                n += 1
+        except Exception:
+            pass
+    return n
+
+
+def show(which):
+    if not FOCUS:
+        return
+    hs = _windows(app_pids(which))
+    for h in hs:
+        try:
+            win32gui.ShowWindow(h, win32con.SW_RESTORE)
+            flags = win32con.SWP_NOMOVE | win32con.SWP_NOSIZE
+            win32gui.SetWindowPos(h, win32con.HWND_TOPMOST, 0, 0, 0, 0, flags)
+            win32gui.SetWindowPos(h, win32con.HWND_NOTOPMOST, 0, 0, 0, 0, flags)
+            try:
+                win32gui.SetForegroundWindow(h)
+            except Exception:
+                pass  # Windows may refuse focus to a background process; the window is still raised
+        except Exception:
+            pass
+    event("window_shown", app=which, windows=len(hs))
+
+
 env = dict(os.environ, BRAKE_RUN=str(RUN), PYTHONUNBUFFERED="1")
 pw_log = open(RUN / "00_lead" / "prewarm_stage.log", "w", encoding="utf-8", errors="replace")
 prewarm = subprocess.Popen([sys.executable, str(STAGES / "prewarm.py")], env=env, cwd=str(RUN),
@@ -89,7 +158,14 @@ event("prewarm_launched", pid=prewarm.pid)
 try:
     # ---- wait for the CAD ----
     cad_ok = False
+    show("solidworks")
+    mins = {"spaceclaim": 0, "fluent": 0}
     while time.time() - T0 < WAIT_CAD_S:
+        for app in mins:                      # keep the pre-opened apps out of the way while SolidWorks builds
+            n = minimize(app)
+            if n and not mins[app]:
+                event("window_minimized", app=app, windows=n)
+            mins[app] += n
         if READY.exists():
             cad_ok = True
             event("cad_ready", **json.loads(READY.read_text()))
@@ -111,11 +187,14 @@ try:
         STOP.write_text("pipeline abort: no CAD\n")
         close_prewarm_fluent()
     else:
+        minimize("fluent")
+        show("spaceclaim")
         rc = run_stage("g2_spaceclaim_prep", "spaceclaim_prep.py", "20_spaceclaim")
         if rc != 0:
             P["status"] = "STOPPED_AT_G2"
             close_prewarm_fluent()
         else:
+            show("fluent")
             rc = run_stage("g3_fluent_fast", "fluent_fast.py", "30_fluent")
             P["status"] = "DONE" if rc == 0 else "STOPPED_AT_G3"
 finally:
