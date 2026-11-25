@@ -178,3 +178,9 @@ an end-to-end run of about 10 minutes, no report, no images.
     Fluent windows (by the PIDs `prewarm.py` recorded, nothing else) while the CAD
     builds, and restores each one when its stage starts. Window handling is
     cosmetic: any error is ignored and never stops a stage.
+52. **Fixes from the first Hermes run (run H1 of the agentic repo, GLM 5.3 Flash)
+    ported here:** null-aware Gate 1 bbox contract in `spaceclaim_prep.py` (a
+    z-only vane row crashed it; `sw_build.py` writes full boxes, so this repo had
+    not hit it), the stage scripts' own window raise / minimize (alongside
+    `pipeline.py`'s), lead checklist corrections, clock-read timing and
+    `-ProfileName` for `install_profile.ps1` / `preflight.ps1`.
