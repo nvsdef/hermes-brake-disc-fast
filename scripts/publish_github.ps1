@@ -13,12 +13,12 @@
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts\publish_github.ps1
-  powershell -ExecutionPolicy Bypass -File scripts\publish_github.ps1 -Owner my-org -Repo hermes-brake-disc
+  powershell -ExecutionPolicy Bypass -File scripts\publish_github.ps1 -Owner my-org -Repo hermes-brake-disc-fast
 #>
 [CmdletBinding()]
 param(
     [string]$Owner = "",
-    [string]$Repo = "hermes-brake-disc",
+    [string]$Repo = "hermes-brake-disc-fast",
     [ValidateSet('public', 'private')][string]$Visibility = 'public',
     [switch]$SkipTests
 )

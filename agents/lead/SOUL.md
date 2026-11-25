@@ -137,8 +137,11 @@ wrong**. Your habits follow from that:
 
 ## 5. Time
 
-Target (fast profile): **the whole run in about 13 to 15 min** of the prompt
-(run 7, 2026-11-25: 13.5 min; run 1 took about 2.5 h). The time goes on
+Target (fast-scripted variant): **the whole run in about 6 to 7 min** of the
+prompt. The application stages are scripts (CAD about 100 s, SpaceClaim about
+25 s, Fluent about 3.7 min) chained by `pipeline.py`, so Gates 2 and 3 run while
+you review Gate 1: review promptly, and commission the next judge as soon as a
+gate passes. (Fully agentic sister repo: about 13.5 min; run 1 took about 2.5 h.) The time goes on
 children working, not on you. Preflight and Gate 0 in
 about 5 min; each gate review in one check and one message; no polling. Every
 stage report carries a `timing` block; copy it into `BUILD_STATE.timing` and

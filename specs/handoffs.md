@@ -37,9 +37,18 @@ within 0.1 %.
 ---
 
 ## Gate 1 - solidworks-engineer -> lead: CAD
-**First call:** launch `scripts/stages/prewarm.py` as a detached
-`submit_ansys_job` (cwd `00_lead`); it writes `20_spaceclaim/prewarm_spaceclaim.json`
-and `30_fluent/prewarm_fluent.json` that Gates 2 and 3 use.
+**First call (fast-scripted variant):** launch `scripts/stages/pipeline.py` as a
+detached `submit_ansys_job` (cwd `00_lead`). It runs `prewarm.py` (writes
+`20_spaceclaim/prewarm_spaceclaim.json` and `30_fluent/prewarm_fluent.json`), waits
+for `10_cad/STEP_READY.json`, then runs the Gate 2 and Gate 3 stage scripts and
+logs each stage in `00_lead/pipeline.json`. **Second call:** `scripts/stages/sw_build.py`
+(cwd `10_cad`), which writes everything below plus `STEP_READY.json` on PASS and
+`sw_build_calls.jsonl` (one line per SolidPilot call). The specialist then judges
+`cad_report.json`.
+
+**Gates 2 and 3 in this variant:** the pipeline starts them before the lead has
+reviewed Gate 1, so the lead's Gate 1 review runs alongside Gate 2. A Gate 1 FAIL
+found by the lead stops the run; the downstream artifacts are then discarded.
 
 **Produces in `10_cad/`:**
 - `cheek_out.SLDPRT`, `vanes.SLDPRT`, `hat.SLDPRT`, `outerpad.SLDPRT`,

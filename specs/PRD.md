@@ -320,7 +320,9 @@ gates) is unchanged.
 | Load updates | q''' and omega every 4 steps (interval average); h every 24 steps | every 10 / 25 steps |
 | Energy gate | applied within 2 % of the closed-form integral and of E; stored / applied 90 to 110 %; the full ts covered | applied within 2 % of E; ratio 90 to 110 % |
 | Heating gate | stored energy rises in every window; friction faces above 300 K and below 1500 K | - |
-| Application start | SpaceClaim and Fluent pre-opened in parallel during Gate 1 (`scripts/stages/prewarm.py`); the stage scripts connect to them | each stage launches its own |
+| Application start | SpaceClaim and Fluent pre-opened in parallel during Gate 1 (`scripts/stages/prewarm.py`, started by `pipeline.py`); the stage scripts connect to them | each stage launches its own |
+| CAD (fast-scripted variant) | `scripts/stages/sw_build.py` replays the `sw-rotor-build` / `sw-pads-calliper` cards and checks through the SolidPilot execution layer | agent places every SolidPilot call |
+| Stage hand-off (fast-scripted variant) | `scripts/stages/pipeline.py` starts Gate 2 on `10_cad/STEP_READY.json` and Gate 3 on Gate 2 exit 0; specialists judge the reports | a specialist launches each stage after the lead's gate |
 | Outputs | `results.json`, mesh, case and data; Fluent left open with a temperature contour | plus histories, images, report |
 
 **What the fast profile does not do.** It does not adjudicate THM-01 to THM-04:

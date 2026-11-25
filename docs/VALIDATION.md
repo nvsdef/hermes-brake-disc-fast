@@ -1,5 +1,37 @@
 # Validation status
 
+This is the **fast-scripted** repository (split from `hermes-brake-disc` at
+commit cc30062 on 2026-11-25). Runs 1 to 7 below were made with the fully
+agentic CAD stage, before the split.
+
+## Run F1, fast-scripted variant (2026-11-25, FR330V-20261125-1616F) - complete
+
+Claude lead + 3 Claude specialists. **6.5 min from Gate 0 to Fluent on the
+contour, 7.0 min including the lead's final check** (16:16:22 to 16:22:52 /
+16:23:24). Every gate PASS first time, no repairs, no relaunch.
+
+| Time | Event |
+|---|---|
+| 16:16:22 | Gate 0 done (lead) |
+| 16:16:43 | pipeline.py launched (pre-opens SpaceClaim + Fluent) |
+| 16:16:46 to 16:18:25 | sw_build.py: 90 SolidPilot calls, 94 s (cheek 7, vanes 16, hat 9, pads/plates 14, calliper 25, assembly + STEP 22 s) |
+| 16:18:25 to 16:18:48 | spaceclaim_prep.py on the pre-opened SpaceClaim: 23 s |
+| 16:18:48 to 16:22:52 | fluent_fast.py on the pre-opened Fluent: 244 s (mesh 71, mesh gate 37, setup 48, solve 77) |
+| 16:19:01 / 16:19:41 / 16:23:24 | lead's own checks of Gates 1, 2, 3 (Gates 1 and 2 reviewed while Fluent ran) |
+
+| Gate | Result | Sub-agent tokens (measured) |
+|---|---|---|
+| 1 CAD (scripted) | 97/97 checks, 28/28 bodies, 9 components (6 identity, 3 flip), STEP 25 / 7 / 9 | 73 776 |
+| 2 SpaceClaim | 15/15; areas within 0.00002 % | 58 827 |
+| 3 Fluent | 18/18; stored/applied 98.79 %, applied 100.09 % of E | 60 585 |
+
+Total sub-agent tokens 193 188 (fully agentic run 7: 283 524). Peaks 694 K rotor /
+897 K pad at 0.2 s; end 383 K / 388 K. Hashes: STEP ab2f86dd..., PMDB d14cd77e...,
+results.json ad5d5ca0.... Fluent left open on the contour.
+
+Scripts-only check before it (FR330V-swtest2, no agents): 16:02:13 to 16:08:07,
+5.9 min, all gates PASS (CAD 103 s, SpaceClaim 23 s, Fluent 225 s).
+
 ## Run 7, repeat of run 6 from a clean start (2026-11-25, FR330V-20261125-1513) - complete
 
 Package commit 44ee08c. All Ansys sessions closed first. **13.5 min end to end**

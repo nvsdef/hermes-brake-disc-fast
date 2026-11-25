@@ -1,19 +1,27 @@
-# Hermes brake-disc
+# Hermes brake-disc - fast-scripted variant
 
-A fictional brake-disc engineering demo. One Hermes **lead** delegates to three
-specialist subagents, one per application:
+A fictional brake-disc engineering demo: SolidWorks -> SpaceClaim -> Fluent, run by
+one **lead** agent and three specialist agents. **This is the fast-scripted
+variant: about 6 to 7 minutes end to end.** The application work is done by vetted
+scripts that the specialists launch and judge; the agents keep every gate.
 
-1. **solidworks-engineer** builds and assembles 9 parts (28 bodies) once in
-   SolidWorks through the SolidPilot MCP.
-2. **spaceclaim-engineer** runs `scripts/stages/spaceclaim_prep.py`: deletes the
-   calliper, names bodies and faces, exports a PMDB (about 1 min).
-3. **fluent-engineer** runs `scripts/stages/fluent_fast.py`: coarse mesh and the
-   whole braking stop (3.54 s), leaving Fluent open on the temperature contour
-   (about 4 min).
+| | [hermes-brake-disc](https://github.com/nvsdef/hermes-brake-disc) (fully agentic) | **hermes-brake-disc-fast** (this repo) |
+|---|---|---|
+| SolidWorks | an agent places all ~100 SolidPilot calls (5.4 to 7.6 min) | `scripts/stages/sw_build.py` replays the same cards and checks through SolidPilot (about 100 s) |
+| SpaceClaim, Fluent | stage scripts, each launched by its specialist after the lead's gate | the same stage scripts, chained by `scripts/stages/pipeline.py` the moment the STEP is ready |
+| Agents | lead + 3 specialists | lead + 3 specialists: launch, judge every report, route failures |
+| End to end | about 13.5 min | about 6 to 7 min |
+
+1. **solidworks-engineer** starts `pipeline.py` (pre-opens SpaceClaim and Fluent)
+   and `sw_build.py` (6 parts, 9 components, 28 bodies, STEP), then judges
+   `cad_report.json`.
+2. **spaceclaim-engineer** judges `tag_report.json` from `spaceclaim_prep.py`
+   (calliper deleted, bodies and faces named, PMDB; about 25 s).
+3. **fluent-engineer** judges `results.json` from `fluent_fast.py` (coarse mesh,
+   the whole 3.54 s stop; about 3.7 min) and leaves Fluent open on the contour.
 
 The lead derives the duty cycle, checks every gate against measured numbers and
-ends with a gate summary. No report and no images (PRD section 6A, fast run
-profile).
+ends with a gate summary. No report and no images (PRD section 6A).
 
 ## What you need
 
@@ -38,11 +46,14 @@ Full list, checks and setup order for people and agents: **`REQUIREMENTS.md`**.
   `profile/`, and `scripts/preflight.ps1` checks a machine against the pinned
   environment. On 2026-11-02 it passed 29/29 checks against a freshly rendered
   profile, with live MCP connections.
-- **Reference run: run 7, 2026-11-25** (Claude agents, SpaceClaim and Fluent
-  pre-opened during the CAD build): all gates PASS first time, no repairs, in
-  **13.5 min** (CAD 7.6, SpaceClaim 0.9, Fluent 4.2, handoffs and checks the
-  rest); 283k sub-agent tokens measured. Runs 4 to 7 all passed (12.3 to 15.0
-  min). Not yet run under Hermes.
+- **Run F1, 2026-11-25** (Claude lead + 3 specialists): all gates PASS first time,
+  **6.5 min** from Gate 0 to Fluent on the contour (7.0 min with the lead's final
+  check); 193k sub-agent tokens measured. See `docs/VALIDATION.md`.
+- **Scripts-only check, 2026-11-25** (FR330V-swtest2, no agents): CAD 103 s,
+  SpaceClaim 23 s, Fluent 225 s, all gates PASS, 5.9 min from launch to Fluent
+  on the contour. The agent run is recorded in `docs/VALIDATION.md`.
+- History before the split (runs 1 to 7, fully agentic CAD) is kept in
+  `docs/VALIDATION.md`. Not yet run under Hermes.
 - **Self-contained:** both MCP servers install from this repo
   (`scripts/bootstrap_workstation.ps1`), see `docs/SETUP.md` section 1.
 
@@ -79,7 +90,7 @@ Full list, checks and setup order for people and agents: **`REQUIREMENTS.md`**.
 
 ## Quick start (any workstation)
 ```powershell
-git clone https://github.com/nvsdef/hermes-brake-disc.git; cd hermes-brake-disc
+git clone https://github.com/nvsdef/hermes-brake-disc-fast.git; cd hermes-brake-disc-fast
 powershell -ExecutionPolicy Bypass -File scripts\bootstrap_workstation.ps1   # SolidPilot + ansys-agent MCPs
 hermes profile create brake --clone                                            # Hermes only, once
 powershell -ExecutionPolicy Bypass -File scripts\install_profile.ps1

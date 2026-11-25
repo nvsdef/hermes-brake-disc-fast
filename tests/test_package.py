@@ -7,12 +7,12 @@ ROOT = Path(__file__).resolve().parents[1]
 ROLES = ['lead', 'solidworks-engineer', 'spaceclaim-engineer', 'fluent-engineer']
 EXPECTED_SKILLS = {
     'lead': ['brake-lead-run', 'brake-duty-cycle'],
-    'solidworks-engineer': ['sw-solidpilot', 'sw-rotor-build', 'sw-pads-calliper'],
+    'solidworks-engineer': ['sw-solidpilot', 'sw-rotor-build', 'sw-pads-calliper', 'sw-scripted-build'],
     'spaceclaim-engineer': ['sc-fast-prep'],
     'fluent-engineer': ['fl-fast-run'],
     '_shared': ['brake-handoff'],
 }
-STAGE_SCRIPTS = ['fluent_fast.py', 'prewarm.py', 'spaceclaim_prep.py']
+STAGE_SCRIPTS = ['fluent_fast.py', 'pipeline.py', 'prewarm.py', 'spaceclaim_prep.py', 'sw_build.py']
 
 
 def skill_files():

@@ -158,3 +158,17 @@ an end-to-end run of about 10 minutes, no report, no images.
 49. **Local model under Hermes.** `install_profile.ps1` takes `-ModelName`,
     `-ModelBaseUrl`, `-ModelProvider` and `-ModelKeyEnv`, so a profile can point at
     a local OpenAI-compatible endpoint (`docs/SETUP.md` section 1b).
+50. **Fast-scripted variant (this repository).** The user asked for a second
+    version of the same workflow that runs in 5 to 7 minutes, with the fully
+    agentic version kept unchanged in `hermes-brake-disc`. The CAD stage became
+    `scripts/stages/sw_build.py`: it replays the vetted SolidPilot call sequence
+    of `sw-rotor-build` / `sw-pads-calliper`, reading the sketch cards verbatim
+    from those skills, through the SolidPilot execution layer (90 calls, about
+    100 s against 5.4 to 7.6 min agent-driven), and stops on the first failed
+    check. `scripts/stages/pipeline.py` pre-opens SpaceClaim and Fluent and runs
+    the two Ansys stage scripts the moment `STEP_READY.json` appears, removing the
+    agent hand-off waits (about 4 min in run 7). The agents keep every gate: each
+    specialist judges its report and the lead re-checks every gate, Gates 1 and 2
+    while Fluent runs. Trade-off: Gate 2 starts before the lead's Gate 1 review;
+    a late Gate 1 FAIL stops the run and discards downstream artifacts. Run F1:
+    6.5 min, all gates PASS.

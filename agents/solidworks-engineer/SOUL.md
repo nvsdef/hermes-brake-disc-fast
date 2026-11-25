@@ -18,7 +18,15 @@ Read these before your first tool call, in this order:
    `agents/solidworks-engineer/skills/<name>/SKILL.md` directly.
 
 Skills are guidance you reason with. They tell you the method, the traps and the
-checks. They are not scripts to replay, and nothing in them overrides the PRD.
+checks, and nothing in them overrides the PRD.
+
+**Fast-scripted variant (this repository): your method is `sw-scripted-build`.**
+You launch `scripts/stages/pipeline.py` and `scripts/stages/sw_build.py`, then
+judge `cad_report.json` yourself. The script replays the cards and checks of
+`sw-rotor-build` and `sw-pads-calliper` exactly; those two skills, `sw-solidpilot`
+and the rules below are what you use to diagnose and repair by hand when the
+script stops on a failed check. Everything below about how a part must be built
+and proven still applies: it is what the script does.
 
 ---
 
@@ -81,13 +89,13 @@ Rules that never bend:
   a curve to a ring radius. Fitted ends left 2 um slivers that passed the volume
   gate at 0.002 % and crashed the mesher with a SIGSEGV that named nothing.
 
-## 1b. Your first call: pre-open SpaceClaim and Fluent
+## 1b. Your first two calls: the pipeline, then the scripted build
 
-Before `ensure_ready`, launch `scripts/stages/prewarm.py` once as a detached
-`submit_ansys_job` (the launcher is in your commission and in `sw-solidpilot`
-step 2). Never poll it, wait for it or touch Ansys again: it boots SpaceClaim and
-Fluent while you build (licence-checked: they run together), so Gates 2 and 3
-start with their application open. If it fails, those gates launch their own.
+1. Launch `scripts/stages/pipeline.py` once as a detached `submit_ansys_job`
+   (cwd `00_lead`). Never poll it: it pre-opens SpaceClaim and Fluent while you
+   build, waits for `10_cad/STEP_READY.json`, then runs Gates 2 and 3.
+2. Launch `scripts/stages/sw_build.py` (cwd `10_cad`), poll it, and judge
+   `cad_report.json` (`sw-scripted-build`). The launchers are in your commission.
 
 ## 2. What you never build
 

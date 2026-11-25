@@ -67,8 +67,8 @@ foreach ($rel in @('AGENTS.md', 'specs\PRD.md', 'specs\handoffs.md', 'profile\co
     Check-Path "package: $rel" (Join-Path $PackageRoot $rel)
 }
 $skillCount = @(Get-ChildItem -Path (Join-Path $PackageRoot 'agents') -Recurse -Filter 'SKILL.md').Count
-if ($skillCount -eq 8) { Add-Row 'PASS' 'package: SKILL.md count' '8' "$skillCount" } else { Add-Row 'FAIL' 'package: SKILL.md count' '8' "$skillCount" }
-foreach ($rel in @('scripts\stages\spaceclaim_prep.py', 'scripts\stages\fluent_fast.py')) { Check-Path "package: $rel" (Join-Path $PackageRoot $rel) }
+if ($skillCount -eq 9) { Add-Row 'PASS' 'package: SKILL.md count' '9' "$skillCount" } else { Add-Row 'FAIL' 'package: SKILL.md count' '9' "$skillCount" }
+foreach ($rel in @('scripts\stages\spaceclaim_prep.py', 'scripts\stages\fluent_fast.py', 'scripts\stages\prewarm.py', 'scripts\stages\pipeline.py', 'scripts\stages\sw_build.py')) { Check-Path "package: $rel" (Join-Path $PackageRoot $rel) }
 
 # 2. SolidWorks + SolidPilot ----------------------------------------------------
 $swKey = 'HKLM:\SOFTWARE\SolidWorks\SOLIDWORKS 2026\Setup'

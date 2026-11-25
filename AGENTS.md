@@ -6,22 +6,26 @@ puts this file in the system prompt of every conversation, including delegated
 children, so it survives context compaction. Children do **not** receive a
 SOUL.md, so this file tells each agent who it is and what to load.
 
-Flow (PRD H1.2, **fast run profile**, PRD section 6A): **duty cycle (lead) -> build and
-assemble once (solidworks-engineer, SolidPilot MCP) -> SpaceClaim prep: delete the
-calliper, name bodies and faces, export PMDB (spaceclaim-engineer, runs
-`scripts/stages/spaceclaim_prep.py`) -> coarse mesh + short transient heat-up
-(fluent-engineer, runs `scripts/stages/fluent_fast.py`) -> gate summary (lead).**
-SpaceClaim and Fluent are **pre-opened** during the CAD stage: the
-solidworks-engineer's first call launches `scripts/stages/prewarm.py` as a
-detached job (its only Ansys call), and Gates 2 and 3 connect to those sessions.
-No drawings, no images, no report. Target: about 10 minutes of application time.
+**Variant: fast-scripted** (this repository). The sister repository
+`hermes-brake-disc` runs the same workflow fully agentic (an agent places every
+SolidWorks call, about 13.5 min). Here the three application stages are vetted
+scripts that the specialists launch and judge, so a run takes **about 6 to 7 min**.
+
+Flow (PRD H1.2, **fast run profile**, PRD section 6A): **duty cycle (lead) -> CAD:
+the solidworks-engineer launches `scripts/stages/pipeline.py` (fire and forget)
+and `scripts/stages/sw_build.py` (scripted SolidPilot build, about 100 s), then
+judges `cad_report.json` -> the pipeline, which pre-opened SpaceClaim and Fluent
+during the build, runs `scripts/stages/spaceclaim_prep.py` the moment
+`10_cad/STEP_READY.json` appears and then `scripts/stages/fluent_fast.py` ->
+spaceclaim-engineer and fluent-engineer each judge their stage's report ->
+gate summary (lead).** No drawings, no images, no report.
 
 ## 1. Who am I? Find your role, then load your role files before any other tool call
 
 | If you are... | You know it because | Read first (file tool) | Then load these skills (skill_view) |
 |---|---|---|---|
 | **lead** | You were started by the user's prompt, not by `delegate_task` | `agents/lead/SOUL.md` | `brake-lead-run`, `brake-duty-cycle`, `brake-handoff` |
-| **solidworks-engineer** | Your goal starts with `ROLE: solidworks-engineer` | `agents/solidworks-engineer/SOUL.md` | `sw-solidpilot`, `sw-rotor-build`, `sw-pads-calliper` |
+| **solidworks-engineer** | Your goal starts with `ROLE: solidworks-engineer` | `agents/solidworks-engineer/SOUL.md` | `sw-scripted-build` (method); `sw-solidpilot`, `sw-rotor-build`, `sw-pads-calliper` only to diagnose a failure |
 | **spaceclaim-engineer** | Your goal starts with `ROLE: spaceclaim-engineer` | `agents/spaceclaim-engineer/SOUL.md` | `sc-fast-prep` |
 | **fluent-engineer** | Your goal starts with `ROLE: fluent-engineer` | `agents/fluent-engineer/SOUL.md` | `fl-fast-run` |
 
@@ -33,8 +37,10 @@ Skills are guidance you reason with, not scripts to run.
 ## 2. The lead never does a specialist's work
 The lead calls **no** `mcp__solidpilot__*` or `mcp__ansys__*` tool, writes no
 CAD, tagging, meshing or solver script, and never loads `sw-`, `sc-` or `fl-`
-skills. The two vetted stage scripts in `scripts/stages/` are launched by their
-specialist, never by the lead. When a stage fails, the lead re-commissions the owning specialist with
+skills. The vetted stage scripts in `scripts/stages/` are launched by a
+specialist (the solidworks-engineer starts `pipeline.py` and `sw_build.py`; the
+spaceclaim-engineer and fluent-engineer launch their own script only if the
+pipeline did not run it), never by the lead. When a stage fails, the lead re-commissions the owning specialist with
 the failing numbers. This holds after context compaction too: if you are unsure
 of your role, re-read section 1.
 

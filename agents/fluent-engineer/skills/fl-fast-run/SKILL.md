@@ -28,6 +28,19 @@ ran. Measured for the full stop: about 220 s on the pre-opened Fluent (run 7,
 2026-11-25: connect 0.9 s, mesh 63, mesh gate 27, setup 48, solve 75 s), about
 190 to 320 s with its own launch (launch 32 to 92 s).
 
+## Fast-scripted variant: the pipeline runs the script
+
+In this repository `scripts/stages/pipeline.py` runs `fluent_fast.py` right after
+Gate 2's script exits 0, usually before you are commissioned. So:
+
+1. Check the inputs' hashes as in step 1 below.
+2. Read `<RUN>\00_lead\pipeline.json`. If `g3_fluent_fast_start` is there, do
+   not launch: wait for `<RUN>\30_fluent\results.json` (bash `sleep` up to 60 s
+   at a time; Fluent takes about 3.7 min) and go to step 4 (Judge). Launch it
+   yourself (step 2) only if the pipeline stopped before Gate 3
+   (`status` `STOPPED_AT_G2` after a Gate 2 repair, or `ABORTED_NO_CAD`).
+3. The stage log is `<RUN>\30_fluent\g3_fluent_fast_stage.log`.
+
 ## Fast run profile (PRD section 6A)
 
 | Setting | Fast value | PRD full value |

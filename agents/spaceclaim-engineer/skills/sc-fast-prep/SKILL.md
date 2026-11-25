@@ -23,6 +23,20 @@ Measured: about **23 s** when SpaceClaim was pre-opened by `prewarm.py` during
 Gate 1 (connect 0.7 s, import 6 s, export 4 s; 2026-11-25), about 60 to 110 s when
 the script has to launch SpaceClaim itself.
 
+## Fast-scripted variant: the pipeline runs the script
+
+In this repository `scripts/stages/pipeline.py` (started by the
+solidworks-engineer) runs `spaceclaim_prep.py` the moment
+`10_cad/STEP_READY.json` appears, usually before you are commissioned. So:
+
+1. Check the inputs' hashes as in step 1 below.
+2. Read `<RUN>\00_lead\pipeline.json`. If it has a `g2_spaceclaim_prep_end`
+   event, do not launch: go to step 4 (Judge). If the stage is running
+   (`g2_spaceclaim_prep_start` only), wait for `tag_report.json` (bash `sleep`
+   up to 60 s at a time). Launch the script yourself (step 2) only if
+   `pipeline.json` is missing or its `status` is `ABORTED_NO_CAD`.
+3. The stage log is `<RUN>\20_spaceclaim\g2_spaceclaim_prep_stage.log`.
+
 ## What the script does
 
 1. Uses the SpaceClaim that `prewarm.py` opened during Gate 1

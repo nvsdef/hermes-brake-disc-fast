@@ -141,147 +141,68 @@ End your final reply with one JSON block:
 
 ---
 
-## B1. Gate 1 - solidworks-engineer - CAD build
+## B1. Gate 1 - solidworks-engineer - scripted CAD build (fast-scripted variant)
 
 **goal**
 
 ```
-ROLE: solidworks-engineer - Gate 1 CAD build for run <RUN_ID>. First launch the
-pre-open job (prewarm.py), then build the 6 FR-330V part files at true global
-position in SolidWorks, assemble 9 components (cheek_out, outerpad and bp_outer
-each twice, the second flipped 180 deg about +X), measure every part against PRD
-section 4, export brake.step (25 solids / 9 occurrences = 28 bodies), and write
-cad_report.json in <RUN>\10_cad\. No drawings. Child <N> of <BUDGET>.
+ROLE: solidworks-engineer - Gate 1 for run <RUN_ID>. Launch the Ansys pipeline
+(pipeline.py, fire and forget), then the scripted SolidWorks build (sw_build.py),
+and judge <RUN>\10_cad\cad_report.json against PRD section 4: 6 part files,
+brake.SLDASM with 9 components (3 flipped), brake.step 25 / 7 / 9, 28 body rows.
+Child <N> of <BUDGET>.
 ```
 
 **context** = preamble A with `<ROLE>` = `solidworks-engineer`, `<SKILL LIST>` =
-`sw-solidpilot, sw-rotor-build, sw-pads-calliper`, `<SECTIONS>` = `1 to 4`,
-`<GATE>` = `Gate 1`, `<STAGE_FOLDER>` = `10_cad`, then:
+`sw-scripted-build` (diagnosis only: `sw-solidpilot, sw-rotor-build,
+sw-pads-calliper`), `<SECTIONS>` = `4`, `<GATE>` = `Gate 1`, `<STAGE_FOLDER>` =
+`10_cad`, then:
 
 ```
-PRE-OPEN SPACECLAIM AND FLUENT (your FIRST tool call after reading your files,
-before ensure_ready): one fire-and-forget submit_ansys_job, cwd=<RUN>\00_lead,
-job_name prewarm, script_text exactly:
+READ (before any tool call, nothing else unless a check fails): your SOUL and
+sw-scripted-build/SKILL.md.
+
+CALL 1 - PIPELINE (fire and forget, never poll): submit_ansys_job,
+cwd=<RUN>\00_lead, job_name pipeline, script_text exactly:
   import os, runpy
   os.environ["BRAKE_RUN"] = r"<RUN>"
-  runpy.run_path(r"<PROJECT>\scripts\stages\prewarm.py", run_name="__main__")
-Do not poll it or wait for it: it opens SpaceClaim and Fluent in the background
-while you build, and Gates 2 and 3 connect to them. This is the only Ansys call
-you make.
+  runpy.run_path(r"<PROJECT>\scripts\stages\pipeline.py", run_name="__main__")
 
-READ (before any tool call, and nothing else unless a check fails): your SOUL,
-the three SKILL.md files, sw-rotor-build/references/sketch-data.md,
-sw-pads-calliper/references/sketch-data.md and
-sw-pads-calliper/references/assembly-and-report.md (clearance definitions and
-the cad_report layout). SolidWorks may hold documents from the previous run
-(all saved, titles collide with yours): after ensure_ready, close them once with
-close_document(close_all=true, save=false).
+CALL 2 - BUILD: submit_ansys_job, cwd=<RUN>\10_cad, job_name g1_sw_build,
+script_text exactly:
+  import os, runpy
+  os.environ["BRAKE_RUN"] = r"<RUN>"
+  runpy.run_path(r"<PROJECT>\scripts\stages\sw_build.py", run_name="__main__")
+Poll job_status(job_id, wait_seconds=55): expected about 100 s, final stdout line
+"STATUS PASS in <s> s, 90 calls". SolidWorks may hold saved documents from an
+earlier run of this project; the script closes them (close_all).
 
-INPUT
-- <RUN>\00_lead\case.json  sha256 <sha:case.json>  (for reference only; the
-  vane hand and omega sign in it must agree with what you build)
+INPUT: <RUN>\00_lead\case.json sha256 <sha:case.json>
 
-WHAT TO BUILD (PRD sections 2 and 3; mm in the PRD, METRES in SolidPilot:
-divide by 1000 once, at the call)
-- 6 part files, exact names: cheek_out, vanes, hat, outerpad, bp_outer,
-  calliper. One part per file. Only 'vanes' has more than one body (20). Never
-  merge cheeks, vanes and hat.
-- cheek_in, innerpad and bp_inner are NOT built: insert cheek_out.SLDPRT,
-  outerpad.SLDPRT and bp_outer.SLDPRT a second time with
-  transform_json='[1,0,0,0,-1,0,0,0,-1,0,0,0,1]' (180 deg about +X).
-- Z is the shaft axis, origin at the vent mid-plane, +Z outboard. Pads centred
-  on +X. Angles from +X towards +Y.
-- Build every part at its true global position. Assemble brake.SLDASM with 9
-  components: 6 identity, 3 flipped. Nothing is moved after it is built.
-- Never copy a part file and edit its offset, never use a mirror feature.
-- Vanes: region between circles R117 and R123 about C = (20.722, 94.249),
-  branch whose angle INCREASES with r (about -2.3 to +2.3 deg at r = 95, +29.8 to
-  +33.4 deg at r = 165), trimmed to exact r = 95 and r = 165 cylinders, extruded
-  mid-plane z = -6 to +6. Vane k is vane 1 rotated (k - 1) x 18 deg: rotate the
-  sketch coordinates, one closed profile per vane. DO NOT use a circular-pattern
-  feature (it reports 20 and makes 1).
-- Hat: revolve (z, r) polygon (43,35) (43,86) (-6,88) (-6,95) (-16,95) (-16,78)
-  (33,74) (33,35) 360 deg about Z, then five dia 14 through-holes on PCD 115 at
-  0, 72, 144, 216, 288 deg through z = +33 to +43. Verify z = -16 to +43 by
-  measuring; do not trust a reverse flag.
-- Calliper: PRD section 3.4 steps 1 to 6 exactly. Windows use the SAME z band as
-  the slot, z = -39 to +38.6. Piston bores dia 26 at r = 140, angles -20, 0, +20:
-  three from z = +38.6 to +46.6, three from z = -39 to -47. No fillets.
+JUDGE cad_report.json yourself (sandbox python3 / execute_code): status PASS,
+every checks[] row passes, 28 bodies[] rows all pass with vane_01..vane_20 in
+angular order and 3 "flip of" rows, assembly.component_count 9 (6 identity, 3
+flip, transform [1,0,0,0,-1,0,0,0,-1,0,0,0,1]), inputs_sha256 equals the hash
+above, STEP_READY.json exists. Count
+brake.step yourself with regex r"\bMANIFOLD_SOLID_BREP\s*\(" 25,
+r"= ?PRODUCT ?\(" 7, r"\bNEXT_ASSEMBLY_USAGE_OCCURRENCE\s*\(" 9, and compare its
+SHA-256 with step.sha256.
 
-GATE NUMBERS YOU WILL BE CHECKED AGAINST (PRD section 4; tolerance volume 1 %,
-centroid 0.1 mm, bbox 0.05 mm)
-  body        volume m^3     centroid mm (x, y, z)        z band mm
-  cheek_out   5.717699e-4    (0, 0, +11.000)              +6 to +16    x,y -165 to 165
-  cheek_in    5.717699e-4    (0, 0, -11.000)              -16 to -6    x,y -165 to 165
-  vane each   7.251627e-6    vane_01 (123.842, 40.040, 0) -6 to +6
-              vane_01 bbox x 94.922 to 143.121, y -3.850 to 90.942
-              vane_k centroid at r = 130.154, angle 17.917 + (k-1) x 18 deg
-  vanes (20)  1.450325e-4    (0, 0, 0)
-  hat         5.132043e-4    (0, 0, +18.095)              -16 to +43   x,y -95 to 95
-              (before holes 5.209012e-4; polygon area 1139.0 mm^2)
-  outerpad    7.037168e-5    (134.600, 0, +22.000)        +16 to +28
-  innerpad    7.037168e-5    (134.600, 0, -22.000)        -28 to -16
-  bp_outer    4.398230e-5    (135.111, 0, +31.000)        +28 to +34
-  bp_inner    4.398230e-5    (135.111, 0, -31.000)        -34 to -28
-  calliper    6.170815e-4    (146.143, 0.000, +0.369)     -57 to +57
-              x 81.245 to 200.000, y -98.418 to 98.418
-  rotor (cheeks + vanes + hat) 1.801777e-3 m^3 -> 12.973 kg at 7200 kg/m^3
-  Calliper band section areas (to localise a miss): 11 891.10 mm^2 for
-  z -57 to -47 and +46.6 to +57; 10 298.32 for -47 to -42 and +42 to +46.6;
-  15 050.62 for -42 to -39 and +38.6 to +42; 2 310.76 for -39 to +38.6.
-  Interference anywhere: 0 mm^3.
-  Clearances: pad stack to slot axial 4.6 mm outboard (34 vs 38.6) and 5.0 mm
-  inboard (-34 vs -39); slot height 77.6 vs stack 68 -> +9.6 mm; rotor OD to
-  bridge inner radius 13.0 mm (165 vs 178); hat wall to calliper end wall
-  11.8 mm (r 86.18 at z = +38.6 vs r = 98).
+GATE NUMBERS (PRD section 4; volume 1 %, centroid 0.1 mm): cheek_out 5.717699e-4
+(0,0,+11.000); vane 7.251627e-6 each, r 130.154 at 17.917+(k-1)x18 deg, vane_01
+(123.842, 40.040, 0), total 1.450325e-4; hat 5.132043e-4 (0,0,+18.095) z -16..+43;
+outerpad 7.037168e-5 (134.600,0,+22.000); bp_outer 4.398230e-5 (135.111,0,+31.000);
+calliper 6.170815e-4 (146.143,0,+0.369); flipped cheek_in / innerpad / bp_inner at
+z -11 / -22 / -31; rotor 12.973 kg.
 
-ASSEMBLY AND STEP GATE (the lead checks these first; run 1 exported a 23-solid
-STEP from an assembly missing 5 parts)
-- BEFORE export: analyze_assembly must list 9 components (cheek_out, cheek_in,
-  vanes, hat, outerpad, innerpad, bp_outer, bp_inner, calliper). If it lists
-  fewer, insert the missing parts and re-read. Do not export an 8-component
-  assembly.
-- AFTER export: count in brake.step with a regex scan (SolidWorks writes a space
-  before the parenthesis, so a plain "NAME(" count returns 0):
-  r"\bMANIFOLD_SOLID_BREP\s*\(" 25, r"= ?PRODUCT ?\(" 7,
-  r"\bNEXT_ASSEMBLY_USAGE_OCCURRENCE\s*\(" 9.
-  If either is wrong, fix the assembly and re-export (HALT rule applies).
+ON FAIL: the script stops at the first failed check (cad_report.failure) and the
+pipeline does not start Gate 2. Diagnose with sw-solidpilot / sw-rotor-build /
+sw-pads-calliper, repair by hand (HALT: two repairs), and write STEP_READY.json
+only after your own Gate 1 check passes.
 
-OUTPUT CONTRACT (specs/handoffs.md Gate 1), all in <RUN>\10_cad\
-- cheek_out.SLDPRT, vanes.SLDPRT, hat.SLDPRT, outerpad.SLDPRT, bp_outer.SLDPRT,
-  calliper.SLDPRT
-- brake.SLDASM (all 9 components)
-- brake.step (one export, calliper included, 28 manifold solids)
-- cad_report.json with:
-  bodies[] 28 rows {name, part, volume_m3, expected_volume_m3,
-    volume_delta_pct, centroid_mm, expected_centroid_mm, bbox_mm,
-    expected_bbox_mm, bbox_method, pass}; vanes as vane_01 to vane_20 in
-    angular order. SolidPilot has no bbox call: derive the bbox from measured
-    face positions, edge radii and vertices, and name the method.
-  assembly {component_count, components[]} read from analyze_assembly BEFORE
-    the export
-  interference_mm3 and interference_method (pairwise gap and coincident-face
-    check; SpaceClaim's Gate 2 contact graph is the independent cross-check)
-  clearances_mm {each PRD section 4 clearance, measured}
-  requirements {PKG-01..05, MAS-01, GEO-01..04, GEO-06, PAD-01..05: measured
-    value, unit, how measured}
-  vane_hand {theta_at_r95_deg, theta_at_r165_deg, rotation_viewed_from_plus_z}
-  step {path, sha256, manifold_solid_count, product_count, occurrence_count, ap_schema}
-  native_hashes {file name: sha256} for the 6 SLDPRT and the SLDASM
-  (bodies[] still has 28 rows; cheek_in, innerpad, bp_inner rows carry
-  "source": "flip of <part>", values = source measurement with y and z negated)
-  timing (preamble A)
-
-DO NOT
-- make any drawing, drawing view, rotor_only assembly, render or image (H1.2
-  has no drawings and no images)
-- re-open brake.step in SolidWorks (no re-import: SpaceClaim re-measures all 28
-  bodies at Gate 2)
-- build cross-drilled holes (GEO-05 is deferred) or any second/display model
-- trust volume alone: check centroid and bbox for every body
-- use submit_feature_graph for placement (it ignores every placement key while
-  reporting COMPLETED)
-- write anything outside <RUN>\10_cad\
+RETURN one JSON block: role, gate, status, step_sha256, cad_report_sha256,
+gate_numbers (expected / measured / delta / PASS per body), assembly, step counts,
+timing (seconds, phase_seconds, tool_calls), pipeline_job_id, build_job_id.
 ```
 
 ---
@@ -308,7 +229,13 @@ INPUTS (frozen at Gate 1; refuse to proceed if a hash differs)
     (lead-verified: 25 MANIFOLD_SOLID_BREP, 7 PRODUCT, 9 occurrences, assembly 9 components)
 - <RUN>\10_cad\cad_report.json   sha256 <sha:cad_report.json>
 
-LAUNCH (once) with submit_ansys_job, cwd=<RUN>\20_spaceclaim, job_name g2_sc_prep,
+PIPELINE (fast-scripted variant): pipeline.py, started at Gate 1, runs this stage
+as soon as 10_cad\STEP_READY.json exists. Read <RUN>\00_lead\pipeline.json: if it
+shows g2_spaceclaim_prep_start, do NOT launch; wait for tag_report.json (sleep up
+to 60 s at a time) and judge. Launch yourself only if pipeline.json is missing or
+its status is ABORTED_NO_CAD.
+
+LAUNCH (fallback only) with submit_ansys_job, cwd=<RUN>\20_spaceclaim, job_name g2_sc_prep,
 script_text exactly:
   import os, runpy
   os.environ["BRAKE_RUN"] = r"<RUN>"
@@ -348,7 +275,13 @@ INPUTS (frozen; refuse if a hash differs)
 - <RUN>\20_spaceclaim\brake.pmdb\brake.pmdb   sha256 <sha:pmdb inner file>
 - <RUN>\00_lead\case.json                     sha256 <sha:case.json>
 
-LAUNCH (once) with submit_ansys_job, cwd=<RUN>\30_fluent, job_name g3_fluent_fast,
+PIPELINE (fast-scripted variant): pipeline.py runs this stage right after Gate 2's
+script exits 0. Read <RUN>\00_lead\pipeline.json: if it shows
+g3_fluent_fast_start, do NOT launch; wait for 30_fluent\results.json (sleep up to
+60 s at a time; about 3.7 min) and judge. Launch yourself only if the pipeline
+stopped before Gate 3 (STOPPED_AT_G2 after a Gate 2 repair, or ABORTED_NO_CAD).
+
+LAUNCH (fallback only) with submit_ansys_job, cwd=<RUN>\30_fluent, job_name g3_fluent_fast,
 script_text exactly:
   import os, runpy
   os.environ["BRAKE_RUN"] = r"<RUN>"

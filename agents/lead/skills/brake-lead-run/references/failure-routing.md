@@ -96,8 +96,10 @@ gate fails
 In an interactive session `delegate_task` returns at once and the child runs in
 the background. Hermes posts a completion notice when it finishes. Between the
 two you do nothing: tell the user the stage and expected duration, then end your
-turn. Fast profile, measured on run 7 (2026-11-25): CAD build about 6 to 8 min,
-SpaceClaim prep about 1 min, Fluent mesh and full stop about 4 to 5 min.
+turn. Fast-scripted variant: CAD child about 2.5 min (script about 100 s), the
+SpaceClaim judge under 1 min, the Fluent judge waits for Fluent (about 3.7 min
+after Gate 2). A Gate 1 FAIL found by you while the pipeline is already in Gate 2
+or 3 stops the run: tell the user, and discard the downstream artifacts.
 
 - At most one `delegate_task(action="list")` every 10 minutes, and only if the
   expected duration has clearly passed. Record each in

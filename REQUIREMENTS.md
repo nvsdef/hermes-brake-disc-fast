@@ -58,14 +58,14 @@ Each step must succeed before the next.
 
 | Step | Command (from the repo root) | Done when |
 |---|---|---|
-| 1 | `git clone https://github.com/nvsdef/hermes-brake-disc.git; cd hermes-brake-disc` | folder exists |
+| 1 | `git clone https://github.com/nvsdef/hermes-brake-disc-fast.git; cd hermes-brake-disc-fast` | folder exists |
 | 2 | `powershell -ExecutionPolicy Bypass -File scripts\bootstrap_workstation.ps1 -CheckOnly` | prints `ok` / `TODO` lines and changes nothing; it stops with `STOP:` at the first missing A2, A3, B1 or B2 item (fix it and rerun) |
 | 3 | `powershell -ExecutionPolicy Bypass -File scripts\bootstrap_workstation.ps1` | exits 0; C1, C2, C5 exist |
 | 4 | Hermes only: `hermes profile create brake --clone` | profile exists |
 | 5 | `powershell -ExecutionPolicy Bypass -File scripts\install_profile.ps1` (add `-ModelName`, `-ModelBaseUrl`, `-ModelProvider`, `-ModelKeyEnv` for another model) | configs written, no missing-path error |
 | 6 | Claude only: merge `.local\claude_mcp_servers.json` into the Claude MCP settings (servers `solidpilot`, `ansys-agent`) and restart | the client lists 46 + 10 tools |
 | 7 | `powershell -ExecutionPolicy Bypass -File scripts\preflight.ps1 -McpTest` | **ends with `0 FAIL`** |
-| 8 | Run: Hermes `hermes -p brake chat` + `examples/prompt.md`, or Claude Cowork on this folder + `examples/prompt-claude.md` | all gates PASS in about 13 to 15 min (`docs/VALIDATION.md`, run 7) |
+| 8 | Run: Hermes `hermes -p brake chat` + `examples/prompt.md`, or Claude Cowork on this folder + `examples/prompt-claude.md` | all gates PASS in about 6 to 7 min (`docs/VALIDATION.md`) |
 
 Before each run: close any SpaceClaim or Fluent window left from a previous run.
 SolidWorks may stay open.

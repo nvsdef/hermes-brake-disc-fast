@@ -32,8 +32,8 @@ upstream commit and cloned by the bootstrap (`mcp/solidpilot/SOURCE.md`).
 
 ```powershell
 # 1. Get the package (anywhere; OneDrive is fine for the SOURCE, never for run output)
-git clone https://github.com/nvsdef/hermes-brake-disc.git   # public; no GitHub login needed
-cd hermes-brake-disc
+git clone https://github.com/nvsdef/hermes-brake-disc-fast.git   # public; no GitHub login needed
+cd hermes-brake-disc-fast
 
 # 2. Install the two MCP servers: SolidPilot -> C:\solidpilot (pinned commit, venv,
 #    .NET execution service) and the ansys-agent venv -> C:\brake-tools\ansys-agent-venv.
